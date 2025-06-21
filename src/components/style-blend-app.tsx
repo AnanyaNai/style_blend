@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Wand2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { styleTransfer } from '@/ai/flows/style-transfer-flow';
+import { useToast } from '@/hooks/use-toast';
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -24,6 +26,7 @@ export default function StyleBlendApp() {
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleImageUpload = async (file: File) => {
     setTargetImage(file);
@@ -43,13 +46,22 @@ export default function StyleBlendApp() {
     setIsLoading(true);
     setGeneratedImage(null);
 
-    // Simulate AI style transfer
-    // In a real app, you would call an AI model here.
-    // For this demo, we'll just show the original image after a delay.
-    setTimeout(() => {
-      setGeneratedImage(targetImageUrl);
+    try {
+      const result = await styleTransfer({
+        targetImage: targetImageUrl,
+        style: selectedStyle,
+      });
+      setGeneratedImage(result.generatedImage);
+    } catch (error) {
+      console.error("Style transfer failed:", error);
+      toast({
+        title: "Generation Failed",
+        description: "Sorry, we couldn't generate your image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 2000); // 2-second delay to simulate processing
+    }
   };
 
   return (
