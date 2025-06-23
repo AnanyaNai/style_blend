@@ -5,7 +5,7 @@ import ImageUploader from '@/components/image-uploader';
 import StyleGallery from '@/components/style-gallery';
 import ImagePreview from '@/components/image-preview';
 import { Button } from '@/components/ui/button';
-import { Wand2 } from 'lucide-react';
+import { Wand2, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { styleTransfer } from '@/ai/flows/style-transfer-flow';
@@ -26,6 +26,7 @@ export default function StyleBlendApp() {
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [galleryKey, setGalleryKey] = useState(0);
   const { toast } = useToast();
 
   const handleImageUpload = async (file: File) => {
@@ -64,6 +65,10 @@ export default function StyleBlendApp() {
     }
   };
 
+  const handleMoreStyles = () => {
+    setGalleryKey(prevKey => prevKey + 1);
+  };
+
   return (
     <div className="container mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -76,8 +81,18 @@ export default function StyleBlendApp() {
           </Card>
           <Card>
             <CardContent className="p-6">
-              <h2 className="text-2xl font-semibold mb-4 font-headline">2. Select a Style</h2>
-              <StyleGallery selectedStyle={selectedStyle} onStyleSelect={handleStyleSelect} />
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-semibold font-headline">2. Select a Style</h2>
+                <Button variant="outline" size="sm" onClick={handleMoreStyles}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  More Styles
+                </Button>
+              </div>
+              <StyleGallery
+                key={galleryKey}
+                selectedStyle={selectedStyle}
+                onStyleSelect={handleStyleSelect}
+              />
             </CardContent>
           </Card>
         </div>
