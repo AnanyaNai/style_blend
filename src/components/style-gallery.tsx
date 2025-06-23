@@ -2,10 +2,76 @@
 
 import { useEffect, useState } from 'react';
 import { generateStylePrompts } from '@/ai/flows/style-prompt-generation';
+import { generateStyleImage } from '@/ai/flows/style-image-generation-flow';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { AlertCircle } from 'lucide-react';
+
+// Sub-component for rendering each style card with its own image loading
+function StyleCard({
+  style,
+  isSelected,
+  onSelect,
+}: {
+  style: string;
+  isSelected: boolean;
+  onSelect: (style: string) => void;
+}) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchImage = async () => {
+      setIsLoading(true);
+      try {
+        const result = await generateStyleImage({ style });
+        setImageUrl(result.imageUrl);
+      } catch (error) {
+        console.error(`Failed to generate image for style "${style}":`, error);
+        setImageUrl(null); // Set to null on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchImage();
+  }, [style]);
+
+  return (
+    <Card
+      onClick={() => onSelect(style)}
+      className={cn(
+        'cursor-pointer transition-all duration-200 overflow-hidden group',
+        'hover:shadow-lg hover:-translate-y-1',
+        isSelected ? 'ring-2 ring-primary border-primary' : 'border-border'
+      )}
+    >
+      <CardContent className="p-0">
+        <div className="aspect-square relative bg-muted/50">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={style}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-destructive text-center p-2">
+                <AlertCircle className="w-8 h-8 mb-2"/>
+                <span className="text-xs font-semibold">Image failed to load</span>
+            </div>
+          )}
+        </div>
+        <p className="font-semibold text-center p-2 text-sm truncate">{style}</p>
+      </CardContent>
+    </Card>
+  );
+}
 
 interface StyleGalleryProps {
   selectedStyle: string | null;
@@ -37,10 +103,10 @@ export default function StyleGallery({ selectedStyle, onStyleSelect }: StyleGall
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 8 }).map((_, index) => (
+        {Array.from({ length: 12 }).map((_, index) => (
           <div key={index} className="space-y-2">
-            <Skeleton className="h-24 w-full rounded-lg" />
-            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="aspect-square w-full rounded-lg" />
+            <Skeleton className="h-4 w-3/4 mx-auto" />
           </div>
         ))}
       </div>
@@ -50,28 +116,12 @@ export default function StyleGallery({ selectedStyle, onStyleSelect }: StyleGall
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
       {styles.map((style) => (
-        <Card
+        <StyleCard
           key={style}
-          onClick={() => onStyleSelect(style)}
-          className={cn(
-            "cursor-pointer transition-all duration-200 overflow-hidden group",
-            "hover:shadow-lg hover:-translate-y-1",
-            selectedStyle === style ? 'ring-2 ring-primary border-primary' : 'border-border'
-          )}
-        >
-          <CardContent className="p-0">
-            <div className="aspect-square relative">
-              <Image 
-                src={`https://placehold.co/200x200.png`} 
-                alt={style}
-                fill
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
-                data-ai-hint={style.toLowerCase().split(' ').slice(0,2).join(' ')}
-              />
-            </div>
-            <p className="font-semibold text-center p-2 text-sm truncate">{style}</p>
-          </CardContent>
-        </Card>
+          style={style}
+          isSelected={selectedStyle === style}
+          onSelect={onStyleSelect}
+        />
       ))}
     </div>
   );
