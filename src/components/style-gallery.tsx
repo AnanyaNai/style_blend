@@ -88,7 +88,7 @@ export default function StyleGallery({ selectedStyle, onStyleSelect }: StyleGall
         setIsLoading(true);
         const { stylePrompts } = await generateStylePrompts();
         // Take a slice to avoid showing too many, and shuffle for variety
-        setStyles(stylePrompts.sort(() => 0.5 - Math.random()).slice(0, 12));
+        setStyles(stylePrompts.sort(() => 0.5 - Math.random()).slice(0, 8));
       } catch (error) {
         console.error("Failed to fetch styles:", error);
         // Fallback styles
@@ -103,7 +103,7 @@ export default function StyleGallery({ selectedStyle, onStyleSelect }: StyleGall
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 12 }).map((_, index) => (
+        {Array.from({ length: 8 }).map((_, index) => (
           <div key={index} className="space-y-2">
             <Skeleton className="aspect-square w-full rounded-lg" />
             <Skeleton className="h-4 w-3/4 mx-auto" />
