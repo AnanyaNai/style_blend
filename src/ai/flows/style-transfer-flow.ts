@@ -45,7 +45,7 @@ const styleTransferFlow = ai.defineFlow(
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
       prompt: [
         { media: { url: targetImage } },
-        { text: `Recreate the provided image in the style of: ${style}. Maintain the original composition and subject matter but apply the new artistic style.` },
+        { text: `Apply the artistic style of "${style}" to the provided image. It is critically important to preserve the original subject, their features (especially facial features), and the overall composition. The final image should be clearly recognizable as the same person and scene, just rendered in a new artistic style. Do not change the person's identity or the core objects in the scene.` },
       ],
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
