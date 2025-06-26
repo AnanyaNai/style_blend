@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import ImageUploader from '@/components/image-uploader';
 import StyleGallery from '@/components/style-gallery';
 import ImagePreview from '@/components/image-preview';
@@ -61,16 +61,12 @@ export default function StyleBlendApp() {
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [styles, setStyles] = useState<{name: string, hint: string}[]>([]);
+  const [styles, setStyles] = useState<{name: string, hint: string}[]>(ALL_STYLES.slice(0, 8));
   const { toast } = useToast();
 
   const loadNewStyles = () => {
     setStyles(shuffleArray([...ALL_STYLES]).slice(0, 8));
   };
-  
-  useEffect(() => {
-    loadNewStyles();
-  }, []);
 
   const handleImageUpload = async (file: File) => {
     setTargetImage(file);
