@@ -1,9 +1,12 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { generateStyleImage } from '@/ai/flows/style-image-generation-flow';
+import { useToast } from '@/hooks/use-toast';
 
 interface StyleInfo {
   name: string;
@@ -14,10 +17,14 @@ function StyleCard({
   style,
   isSelected,
   onSelect,
+  imageUrl,
+  isLoading,
 }: {
   style: StyleInfo;
   isSelected: boolean;
   onSelect: (styleName: string) => void;
+  imageUrl: string | null;
+  isLoading: boolean;
 }) {
   return (
     <Card
@@ -30,13 +37,16 @@ function StyleCard({
     >
       <CardContent className="p-0">
         <div className="aspect-square relative bg-muted/50">
-          <Image
-            src={`https://placehold.co/200x200.png`}
-            alt={style.name}
-            data-ai-hint={style.hint}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-          />
+          {isLoading || !imageUrl ? (
+            <Skeleton className="h-full w-full" />
+          ) : (
+            <Image
+              src={imageUrl}
+              alt={style.name}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          )}
         </div>
         <p className="font-semibold text-center p-2 text-sm truncate">{style.name}</p>
       </CardContent>
@@ -51,6 +61,44 @@ interface StyleGalleryProps {
 }
 
 export default function StyleGallery({ styles, selectedStyle, onStyleSelect }: StyleGalleryProps) {
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (styles && styles.length > 0) {
+      const fetchImagesSequentially = async () => {
+        // Reset states for new styles
+        setImageUrls({});
+        const initialLoadingStates = styles.reduce((acc, style) => {
+          acc[style.name] = true;
+          return acc;
+        }, {} as Record<string, boolean>);
+        setLoadingStates(initialLoadingStates);
+
+        for (const style of styles) {
+          if (imageUrls[style.name]) {
+            // Image already loaded or being loaded
+            setLoadingStates(prev => ({ ...prev, [style.name]: false }));
+            continue;
+          }
+          try {
+            const result = await generateStyleImage({ style: style.name });
+            setImageUrls(prev => ({ ...prev, [style.name]: result.imageUrl }));
+          } catch (error) {
+            console.error(`Failed to generate style image for ${style.name}:`, error);
+            // Don't show toast for every single failure to avoid spam
+          } finally {
+            setLoadingStates(prev => ({ ...prev, [style.name]: false }));
+          }
+        }
+      };
+
+      fetchImagesSequentially();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [styles]);
+
   if (!styles || styles.length === 0) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
@@ -72,6 +120,8 @@ export default function StyleGallery({ styles, selectedStyle, onStyleSelect }: S
           style={style}
           isSelected={selectedStyle === style.name}
           onSelect={onStyleSelect}
+          imageUrl={imageUrls[style.name] || null}
+          isLoading={loadingStates[style.name] ?? true}
         />
       ))}
     </div>
