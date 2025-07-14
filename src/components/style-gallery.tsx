@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { generateStyleImage } from '@/ai/flows/style-image-generation-flow';
 
 interface StyleInfo {
   name: string;
@@ -21,47 +19,6 @@ function StyleCard({
   isSelected: boolean;
   onSelect: (styleName: string) => void;
 }) {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let isCancelled = false;
-    const fetchImage = async () => {
-      setIsLoading(true);
-      try {
-        const result = await generateStyleImage({ style: style.name });
-        if (!isCancelled) {
-          setImageUrl(result.imageUrl);
-        }
-      } catch (error) {
-        console.error(`Failed to generate image for style: ${style.name}`, error);
-        // Fallback to placeholder if generation fails
-        if (!isCancelled) {
-           setImageUrl(`https://placehold.co/200x200.png`);
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchImage();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [style.name]);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        <Skeleton className="aspect-square w-full rounded-lg" />
-        <Skeleton className="h-4 w-3/4 mx-auto" />
-      </div>
-    );
-  }
-
   return (
     <Card
       onClick={() => onSelect(style.name)}
@@ -74,7 +31,7 @@ function StyleCard({
       <CardContent className="p-0">
         <div className="aspect-square relative bg-muted/50">
           <Image
-            src={imageUrl || `https://placehold.co/200x200.png`}
+            src={`https://placehold.co/200x200.png`}
             alt={style.name}
             data-ai-hint={style.hint}
             fill
@@ -106,7 +63,7 @@ export default function StyleGallery({ styles, selectedStyle, onStyleSelect }: S
       </div>
     );
   }
-
+  
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
       {styles.map((style) => (
