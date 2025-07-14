@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -64,26 +64,32 @@ export default function StyleGallery({ styles, selectedStyle, onStyleSelect }: S
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
+  // Use a ref to cache images across style refreshes
+  const imageCache = useRef<Record<string, string>>({});
 
   useEffect(() => {
     if (styles && styles.length > 0) {
       const fetchImagesSequentially = async () => {
-        // Reset states for new styles
-        setImageUrls({});
         const initialLoadingStates = styles.reduce((acc, style) => {
-          acc[style.name] = true;
+          // If the image isn't in the cache, it needs to be loaded.
+          acc[style.name] = !imageCache.current[style.name];
           return acc;
         }, {} as Record<string, boolean>);
         setLoadingStates(initialLoadingStates);
 
+        // Set images from cache immediately
+        setImageUrls(prev => ({ ...prev, ...imageCache.current }));
+
         for (const style of styles) {
-          if (imageUrls[style.name]) {
-            // Image already loaded or being loaded
-            setLoadingStates(prev => ({ ...prev, [style.name]: false }));
+          // Only fetch if not in our cache
+          if (imageCache.current[style.name]) {
             continue;
           }
+
           try {
             const result = await generateStyleImage({ style: style.name });
+            // Update both the cache and the current state
+            imageCache.current[style.name] = result.imageUrl;
             setImageUrls(prev => ({ ...prev, [style.name]: result.imageUrl }));
           } catch (error) {
             console.error(`Failed to generate style image for ${style.name}:`, error);
