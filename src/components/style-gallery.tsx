@@ -107,9 +107,10 @@ export default function StyleGallery({ selectedStyle, onStyleSelect }: StyleGall
   }, []);
 
   useEffect(() => {
-    // Load initial styles only once on mount
-    loadNewStyles();
-  }, [loadNewStyles]);
+    // Load initial styles only once on mount to prevent hydration errors.
+    const initialStyles = shuffleArray([...ALL_STYLES]).slice(0, 8);
+    setStyles(initialStyles);
+  }, []);
 
   useEffect(() => {
     if (styles && styles.length > 0) {
