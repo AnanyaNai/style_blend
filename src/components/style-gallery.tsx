@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { generateStyleImage } from '@/ai/flows/style-image-generation-flow';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 
@@ -48,19 +47,14 @@ const shuffleArray = (array: any[]) => {
   return array;
 }
 
-
 function StyleCard({
   style,
   isSelected,
   onSelect,
-  imageUrl,
-  isLoading,
 }: {
   style: StyleInfo;
   isSelected: boolean;
   onSelect: (styleName: string) => void;
-  imageUrl: string | null;
-  isLoading: boolean;
 }) {
   return (
     <Card
@@ -73,16 +67,13 @@ function StyleCard({
     >
       <CardContent className="p-0">
         <div className="aspect-square relative bg-muted/50">
-          {isLoading || !imageUrl ? (
-            <Skeleton className="h-full w-full" />
-          ) : (
             <Image
-              src={imageUrl}
+              src={`https://placehold.co/300x300.png`}
               alt={style.name}
+              data-ai-hint={style.hint}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
-          )}
         </div>
         <p className="font-semibold text-center p-2 text-sm truncate">{style.name}</p>
       </CardContent>
@@ -97,52 +88,17 @@ interface StyleGalleryProps {
 
 export default function StyleGallery({ selectedStyle, onStyleSelect }: StyleGalleryProps) {
   const [styles, setStyles] = useState<StyleInfo[]>([]);
-  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
-  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
-  const imageCache = useRef<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
   const loadNewStyles = useCallback(() => {
-    const newStyles = shuffleArray([...ALL_STYLES]).slice(0, 8);
-    setStyles(newStyles);
+    setStyles(shuffleArray([...ALL_STYLES]).slice(0, 8));
   }, []);
 
   useEffect(() => {
-    // Load initial styles only once on mount to prevent hydration errors.
-    const initialStyles = shuffleArray([...ALL_STYLES]).slice(0, 8);
-    setStyles(initialStyles);
-  }, []);
-
-  useEffect(() => {
-    if (styles && styles.length > 0) {
-      const fetchImagesSequentially = async () => {
-        const initialLoadingStates = styles.reduce((acc, style) => {
-          acc[style.name] = !imageCache.current[style.name];
-          return acc;
-        }, {} as Record<string, boolean>);
-        setLoadingStates(initialLoadingStates);
-
-        setImageUrls(prev => ({ ...prev, ...imageCache.current }));
-
-        for (const style of styles) {
-          if (imageCache.current[style.name]) {
-            continue;
-          }
-
-          try {
-            const result = await generateStyleImage({ style: style.name });
-            imageCache.current[style.name] = result.imageUrl;
-            setImageUrls(prev => ({ ...prev, [style.name]: result.imageUrl }));
-          } catch (error) {
-            console.error(`Failed to generate style image for ${style.name}:`, error);
-          } finally {
-            setLoadingStates(prev => ({ ...prev, [style.name]: false }));
-          }
-        }
-      };
-
-      fetchImagesSequentially();
-    }
-  }, [styles]);
+    // Load initial styles on client-side to avoid hydration issues
+    loadNewStyles();
+    setIsLoading(false);
+  }, [loadNewStyles]);
 
   return (
     <div>
@@ -154,7 +110,7 @@ export default function StyleGallery({ selectedStyle, onStyleSelect }: StyleGall
             </Button>
         </div>
         
-        {styles.length === 0 ? (
+        {isLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
                 {Array.from({ length: 8 }).map((_, index) => (
                 <div key={index} className="space-y-2">
@@ -171,8 +127,6 @@ export default function StyleGallery({ selectedStyle, onStyleSelect }: StyleGall
                 style={style}
                 isSelected={selectedStyle === style.name}
                 onSelect={onStyleSelect}
-                imageUrl={imageUrls[style.name] || null}
-                isLoading={loadingStates[style.name] ?? true}
                 />
             ))}
             </div>
