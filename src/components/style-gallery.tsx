@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface StyleInfo {
   name: string;
@@ -94,7 +94,8 @@ export default function StyleGallery({ selectedStyle, onStyleSelect }: StyleGall
     // Shuffle the array and take the first 8
     const newStyles = shuffleArray([...ALL_STYLES]).slice(0, 8);
     setStyles(newStyles);
-    setIsLoading(false);
+    // Use a short timeout to allow loading skeleton to appear briefly for better UX
+    setTimeout(() => setIsLoading(false), 200);
   }, []);
 
   useEffect(() => {
@@ -106,7 +107,7 @@ export default function StyleGallery({ selectedStyle, onStyleSelect }: StyleGall
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold font-headline">2. Select a Style</h2>
-        <Button variant="outline" size="sm" onClick={loadNewStyles} disabled={isLoading}>
+        <Button variant="outline" size="sm" onClick={loadNewStyles}>
           <RefreshCw className="h-4 w-4 mr-2" />
           More Styles
         </Button>
