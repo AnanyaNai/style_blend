@@ -36,7 +36,6 @@ const ALL_STYLES: StyleInfo[] = [
     { name: 'Cartoon', hint: 'cartoon character' },
 ];
 
-// Function to shuffle an array
 const shuffleArray = (array: any[]) => {
   let currentIndex = array.length, randomIndex;
   while (currentIndex !== 0) {
@@ -67,13 +66,13 @@ function StyleCard({
     >
       <CardContent className="p-0">
         <div className="aspect-square relative bg-muted/50">
-            <Image
-              src={`https://placehold.co/300x300.png`}
-              alt={style.name}
-              data-ai-hint={style.hint}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-            />
+          <Image
+            src={`https://placehold.co/300x300.png`}
+            alt={style.name}
+            data-ai-hint={style.hint}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
         </div>
         <p className="font-semibold text-center p-2 text-sm truncate">{style.name}</p>
       </CardContent>
@@ -91,46 +90,49 @@ export default function StyleGallery({ selectedStyle, onStyleSelect }: StyleGall
   const [isLoading, setIsLoading] = useState(true);
 
   const loadNewStyles = useCallback(() => {
-    setStyles(shuffleArray([...ALL_STYLES]).slice(0, 8));
+    setIsLoading(true);
+    // Shuffle the array and take the first 8
+    const newStyles = shuffleArray([...ALL_STYLES]).slice(0, 8);
+    setStyles(newStyles);
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
-    // Load initial styles on client-side to avoid hydration issues
+    // Initial load on mount
     loadNewStyles();
-    setIsLoading(false);
   }, [loadNewStyles]);
 
   return (
     <div>
-        <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold font-headline">2. Select a Style</h2>
-            <Button variant="outline" size="sm" onClick={loadNewStyles}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            More Styles
-            </Button>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold font-headline">2. Select a Style</h2>
+        <Button variant="outline" size="sm" onClick={loadNewStyles} disabled={isLoading}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          More Styles
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="space-y-2">
+              <Skeleton className="aspect-square w-full rounded-lg" />
+              <Skeleton className="h-4 w-3/4 mx-auto" />
+            </div>
+          ))}
         </div>
-        
-        {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
-                {Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="space-y-2">
-                    <Skeleton className="aspect-square w-full rounded-lg" />
-                    <Skeleton className="h-4 w-3/4 mx-auto" />
-                </div>
-                ))}
-            </div>
-        ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
-            {styles.map((style) => (
-                <StyleCard
-                key={style.name}
-                style={style}
-                isSelected={selectedStyle === style.name}
-                onSelect={onStyleSelect}
-                />
-            ))}
-            </div>
-        )}
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
+          {styles.map((style) => (
+            <StyleCard
+              key={style.name}
+              style={style}
+              isSelected={selectedStyle === style.name}
+              onSelect={onStyleSelect}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
