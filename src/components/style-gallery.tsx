@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -13,6 +13,7 @@ interface StyleInfo {
   hint: string;
 }
 
+// A static, predefined list of styles.
 const ALL_STYLES: StyleInfo[] = [
     { name: 'Steampunk', hint: 'steampunk machine' },
     { name: 'Art Deco', hint: 'art deco building' },
@@ -36,6 +37,7 @@ const ALL_STYLES: StyleInfo[] = [
     { name: 'Cartoon', hint: 'cartoon character' },
 ];
 
+// A helper function to shuffle an array.
 const shuffleArray = (array: any[]) => {
   let currentIndex = array.length, randomIndex;
   while (currentIndex !== 0) {
@@ -46,6 +48,7 @@ const shuffleArray = (array: any[]) => {
   return array;
 }
 
+// A simple card component to display a style.
 function StyleCard({
   style,
   isSelected,
@@ -86,22 +89,13 @@ interface StyleGalleryProps {
 }
 
 export default function StyleGallery({ selectedStyle, onStyleSelect }: StyleGalleryProps) {
-  const [styles, setStyles] = useState<StyleInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
+  // We don't need to track loading state as the images are static.
+  const [styles, setStyles] = useState<StyleInfo[]>(() => shuffleArray([...ALL_STYLES]).slice(0, 8));
+  
   const loadNewStyles = useCallback(() => {
-    setIsLoading(true);
-    // Shuffle the array and take the first 8
     const newStyles = shuffleArray([...ALL_STYLES]).slice(0, 8);
     setStyles(newStyles);
-    // Use a short timeout to allow loading skeleton to appear briefly for better UX
-    setTimeout(() => setIsLoading(false), 200);
   }, []);
-
-  useEffect(() => {
-    // Initial load on mount
-    loadNewStyles();
-  }, [loadNewStyles]);
 
   return (
     <div>
@@ -113,27 +107,16 @@ export default function StyleGallery({ selectedStyle, onStyleSelect }: StyleGall
         </Button>
       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <div key={index} className="space-y-2">
-              <Skeleton className="aspect-square w-full rounded-lg" />
-              <Skeleton className="h-4 w-3/4 mx-auto" />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
-          {styles.map((style) => (
-            <StyleCard
-              key={style.name}
-              style={style}
-              isSelected={selectedStyle === style.name}
-              onSelect={onStyleSelect}
-            />
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
+        {styles.map((style) => (
+          <StyleCard
+            key={style.name}
+            style={style}
+            isSelected={selectedStyle === style.name}
+            onSelect={onStyleSelect}
+          />
+        ))}
+      </div>
     </div>
   );
 }
