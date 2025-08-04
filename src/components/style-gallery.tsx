@@ -1,54 +1,17 @@
 "use client";
 
-import { useState, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { ALL_STYLES } from '@/data/styleGallaryData';
 
 interface StyleInfo {
   name: string;
   hint: string;
+  imageUrl: string;
 }
 
-// A static, predefined list of styles.
-const ALL_STYLES: StyleInfo[] = [
-    { name: 'Steampunk', hint: 'steampunk machine' },
-    { name: 'Art Deco', hint: 'art deco building' },
-    { name: 'Pop Art', hint: 'pop art comic' },
-    { name: 'Cyberpunk', hint: 'cyberpunk city' },
-    { name: 'Renaissance', hint: 'renaissance painting' },
-    { name: 'Impressionism', hint: 'impressionist painting' },
-    { name: 'Cubism', hint: 'cubist portrait' },
-    { name: 'Minimalism', hint: 'minimalist design' },
-    { name: 'Surrealism', hint: 'surrealist dream' },
-    { name: 'Gothic', hint: 'gothic architecture' },
-    { name: 'Baroque', hint: 'baroque sculpture' },
-    { name: 'Art Nouveau', hint: 'art nouveau pattern' },
-    { name: 'Bauhaus', hint: 'bauhaus design' },
-    { name: 'Street Art', hint: 'street art graffiti' },
-    { name: 'Fantasy', hint: 'fantasy landscape' },
-    { name: 'Vintage', hint: 'vintage photograph' },
-    { name: '3D Render', hint: '3d render' },
-    { name: 'Pixel Art', hint: 'pixel art game' },
-    { name: 'Watercolor', hint: 'watercolor painting' },
-    { name: 'Cartoon', hint: 'cartoon character' },
-];
-
-// A helper function to shuffle an array.
-const shuffleArray = (array: any[]) => {
-  let currentIndex = array.length, randomIndex;
-  while (currentIndex !== 0) {
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-  }
-  return array;
-}
-
-// A simple card component to display a style.
+// Style card component
 function StyleCard({
   style,
   isSelected,
@@ -70,7 +33,7 @@ function StyleCard({
       <CardContent className="p-0">
         <div className="aspect-square relative bg-muted/50">
           <Image
-            src={`https://placehold.co/300x300.png`}
+            src={style.imageUrl}
             alt={style.name}
             data-ai-hint={style.hint}
             fill
@@ -89,22 +52,12 @@ interface StyleGalleryProps {
 }
 
 export default function StyleGallery({ selectedStyle, onStyleSelect }: StyleGalleryProps) {
-  // We don't need to track loading state as the images are static.
-  const [styles, setStyles] = useState<StyleInfo[]>(() => shuffleArray([...ALL_STYLES]).slice(0, 8));
-  
-  const loadNewStyles = useCallback(() => {
-    const newStyles = shuffleArray([...ALL_STYLES]).slice(0, 8);
-    setStyles(newStyles);
-  }, []);
+  const styles = ALL_STYLES.slice(0, 8);
 
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold font-headline">2. Select a Style</h2>
-        <Button variant="outline" size="sm" onClick={loadNewStyles}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          More Styles
-        </Button>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
